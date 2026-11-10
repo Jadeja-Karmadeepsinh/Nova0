@@ -66,7 +66,7 @@ export const codeAgentFunction = inngest.createFunction(
 
     const aiModel = process.env.OPENROUTER_API_KEY
       ? (openai({
-          model: process.env.OPENROUTER_MODEL || "google/gemini-2.0-flash-exp:free",
+          model: process.env.OPENROUTER_MODEL || "openrouter/free",
           baseUrl: "https://openrouter.ai/api/v1",
           apiKey: process.env.OPENROUTER_API_KEY,
           step,
