@@ -93,3 +93,4 @@ export function Nova0Logo({
 
 // Backward-compatibility aliases
 export { Nova0Logo as Chai0Logo, Nova0Mark as Chai0Mark };
+
