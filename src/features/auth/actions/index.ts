@@ -52,7 +52,7 @@ export const getCurrentUser = async () => {
         return null;
       }
   
-      const dbUser = await prisma.user.findUnique({
+      let dbUser = await prisma.user.findUnique({
         where: {
           clerkId: user.id,
         },
@@ -64,6 +64,22 @@ export const getCurrentUser = async () => {
           clerkId: true,
         },
       });
+
+      if (!dbUser) {
+        await onBoardUser();
+        dbUser = await prisma.user.findUnique({
+          where: {
+            clerkId: user.id,
+          },
+          select: {
+            id: true,
+            email: true,
+            name: true,
+            imageUrl: true,
+            clerkId: true,
+          },
+        });
+      }
   
       return dbUser;
     } catch (error) {
@@ -71,4 +87,3 @@ export const getCurrentUser = async () => {
       return null;
     }
   };
-  
