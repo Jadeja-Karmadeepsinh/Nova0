@@ -1,4 +1,4 @@
 
 import { Inngest } from "inngest";
 
-export const inngest = new Inngest({ id: "c0-build" });
+export const inngest = new Inngest({ id: "nova0-build" });
