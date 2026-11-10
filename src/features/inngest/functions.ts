@@ -3,7 +3,7 @@ import { inngest } from "./client";
 import { Sandbox } from "@e2b/code-interpreter";
 import { MessageRole, MessageType } from "@/generated/prisma/enums";
 
-import { createAgent, createNetwork, createState, createTool, gemini } from "@inngest/agent-kit"
+import { createAgent, createNetwork, createState, createTool, gemini, openai } from "@inngest/agent-kit"
 import { FRAGMENT_TITLE_PROMPT, PROMPT, RESPONSE_PROMPT } from "@/lib/prompt";
 import z from "zod"
 import { agentOutputText, captureTaskSummary, connectSandbox, lastAssistantTextMessageContent } from "./utils";
@@ -64,25 +64,35 @@ export const codeAgentFunction = inngest.createFunction(
       { messages: previousMessages }
     );
 
-    const geminiModel = gemini({
-      model: "gemini-2.5-flash",
-      step,
-      apiKey: process.env.GEMINI_API_KEY!,
-      defaultParameters: {
-        generationConfig: {
-          temperature: 0,
-          maxOutputTokens: 8192,
-          thinkingConfig: { thinkingBudget: 0 },
-        }
-      }
-    } as Parameters<typeof gemini>[0]
-    )
+    const aiModel = process.env.OPENROUTER_API_KEY
+      ? (openai({
+          model: process.env.OPENROUTER_MODEL || "google/gemini-2.0-flash-exp:free",
+          baseUrl: "https://openrouter.ai/api/v1",
+          apiKey: process.env.OPENROUTER_API_KEY,
+          step,
+          defaultParameters: {
+            temperature: 0,
+            max_tokens: 8192,
+          }
+        } as Parameters<typeof openai>[0]))
+      : (gemini({
+          model: "gemini-2.5-flash",
+          step,
+          apiKey: process.env.GEMINI_API_KEY || "",
+          defaultParameters: {
+            generationConfig: {
+              temperature: 0,
+              maxOutputTokens: 8192,
+              thinkingConfig: { thinkingBudget: 0 },
+            }
+          }
+        } as Parameters<typeof gemini>[0]));
 
     const codeAgent = createAgent({
       name: "code-agent",
       description: "An expert coding agent",
       system: PROMPT,
-      model: geminiModel,
+      model: aiModel,
       tools: [
         // 1. Terminal
         createTool({
@@ -225,7 +235,7 @@ export const codeAgentFunction = inngest.createFunction(
     console.log(result)
     const { summary, files } = result.state.data;
 
-    const makeTextAgent = (name: string, system: string) => createAgent({ name, system, model: geminiModel });
+    const makeTextAgent = (name: string, system: string) => createAgent({ name, system, model: aiModel });
 
     const fragmentTitleGenerator = makeTextAgent("fragment-title-generator", FRAGMENT_TITLE_PROMPT);
     const responseGenerator = makeTextAgent("response-generator", RESPONSE_PROMPT);
